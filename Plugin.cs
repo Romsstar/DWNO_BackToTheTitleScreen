@@ -2,6 +2,7 @@
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using UnityEngine.UI;
 
 namespace BackToTheTitleScreen;
@@ -25,15 +26,15 @@ public class Plugin : BasePlugin
         harmony.PatchAll();
     }
 
-    
+
+    [HarmonyPatch(typeof(AppMainScript._HeadsUpDisp_d__100), "MoveNext")]
     public static class Splash
-    { 
-        [HarmonyPatch(typeof(AppMainScript._HeadsUpDisp_d__100), "MoveNext")]
+    {
         [HarmonyPrefix]
         public static bool Prefix(AppMainScript._HeadsUpDisp_d__100 __instance)
         {
             __instance._waitStartTime_5__2 = 0f;
-           return true;
+            return true;
         }
 
         [HarmonyPatch(typeof(AppMainScript.__CheckDlc_d__96), "MoveNext")]
@@ -45,12 +46,12 @@ public class Plugin : BasePlugin
         }
     }
 
-
+    [HarmonyPatch(typeof(uOptionPanel), "_StartQuitWindow_b__13_0")]
     public static class TitleScreenPatch
     {
-            [HarmonyPatch(typeof(uOptionPanel), "_StartQuitWindow_b__13_0")]
-            [HarmonyPrefix]
-            public static bool Prefix(uOptionPanel __instance, bool b)
+
+        [HarmonyPrefix]
+        public static bool Prefix(uOptionPanel __instance, bool b)
         {
             if (b)
             {
@@ -66,31 +67,52 @@ public class Plugin : BasePlugin
 
             return false;
         }
+    }
 
-        [HarmonyPatch(typeof(MainTitle))]
-        class MainTitlePatch_Update_Patch
+    [HarmonyPatch(typeof(MainTitle))]
+    public static class MainTitlePatch_Update_Patch
+    {
+        [HarmonyPrefix]
+        [HarmonyPatch("Update")]
+        static bool Prefix(MainTitle __instance)
         {
-            [HarmonyPrefix]
-            [HarmonyPatch("Update")]
-            static bool Prefix(MainTitle __instance)
+            bool gameDataExistsInAnySlot = CheckGameDataExistence();
+
+            if (gameDataExistsInAnySlot)
             {
                 GameObject logo = GameObject.Find("Logo");
                 UnityEngine.Object.DestroyImmediate(logo);
 
                 if (__instance.m_movie != null && __instance.m_movie.IsPlaying())
                 {
-      
+
                     __instance.m_movie.Stop();
                     UnityEngine.Object.Destroy(__instance.m_movie.transform.parent.gameObject, 0);
                     __instance.m_movie = null;
                     Resources.UnloadUnusedAssets();
                     GC.Collect();
-                    return false; 
+                    return false;
                 }
-
-                return true;
             }
+
+            return true;
         }
+
+
+        private static bool CheckGameDataExistence()
+        {
+         
+                if (StorageData.IsExistGameData(0) || StorageData.IsExistGameData(1) || StorageData.IsExistGameData(2))
+                {
+                    // Game data exists in at least one slot
+                    return true;
+                }
+            
+
+            // Game data does not exist in any of the slots
+            return false;
+        }
+
 
 
         [HarmonyPatch(typeof(uOptionPanel), "SetMainSettingState")]
@@ -110,7 +132,9 @@ public class Plugin : BasePlugin
             return true;
         }
 
+
         [HarmonyPatch(typeof(uOptionTopPanelCommand), "enablePanel")]
+        [HarmonyPostfix]
         public static void Postfix(uOptionTopPanelCommand __instance)
         {
             GameObject applicationQuitObj = __instance.m_items[3]?.gameObject;
@@ -119,3 +143,4 @@ public class Plugin : BasePlugin
         }
     }
 }
+
