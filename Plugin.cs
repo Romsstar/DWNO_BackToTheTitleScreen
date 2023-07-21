@@ -26,7 +26,6 @@ public class Plugin : BasePlugin
         harmony.PatchAll();
     }
 
-
     [HarmonyPatch(typeof(AppMainScript._HeadsUpDisp_d__100), "MoveNext")]
     public static class Splash
     {
@@ -49,7 +48,6 @@ public class Plugin : BasePlugin
     [HarmonyPatch(typeof(uOptionPanel), "_StartQuitWindow_b__13_0")]
     public static class TitleScreenPatch
     {
-
         [HarmonyPrefix]
         public static bool Prefix(uOptionPanel __instance, bool b)
         {
@@ -70,9 +68,7 @@ public class Plugin : BasePlugin
     }
 
     [HarmonyPatch(typeof(MainTitle))]
-    public static class MainTitlePatch_Update_Patch
-    {
-        [HarmonyPrefix]
+    [HarmonyPrefix]
         [HarmonyPatch("Update")]
         static bool Prefix(MainTitle __instance)
         {
@@ -85,7 +81,6 @@ public class Plugin : BasePlugin
 
                 if (__instance.m_movie != null && __instance.m_movie.IsPlaying())
                 {
-
                     __instance.m_movie.Stop();
                     UnityEngine.Object.Destroy(__instance.m_movie.transform.parent.gameObject, 0);
                     __instance.m_movie = null;
@@ -98,23 +93,19 @@ public class Plugin : BasePlugin
             return true;
         }
 
-
         private static bool CheckGameDataExistence()
         {
-         
-                if (StorageData.IsExistGameData(0) || StorageData.IsExistGameData(1) || StorageData.IsExistGameData(2))
-                {
-                    // Game data exists in at least one slot
-                    return true;
-                }
-            
+            if (StorageData.IsExistGameData(0) || StorageData.IsExistGameData(1) || StorageData.IsExistGameData(2))
+            {
+                // Game data exists in at least one slot
+                return true;
+            }
 
             // Game data does not exist in any of the slots
             return false;
         }
-
-
-
+    public static class DigivicePatch
+    {
         [HarmonyPatch(typeof(uOptionPanel), "SetMainSettingState")]
         [HarmonyPrefix]
         private static bool Prefix(uOptionPanel __instance, uOptionPanel.MainSettingState state)
@@ -132,7 +123,6 @@ public class Plugin : BasePlugin
             return true;
         }
 
-
         [HarmonyPatch(typeof(uOptionTopPanelCommand), "enablePanel")]
         [HarmonyPostfix]
         public static void Postfix(uOptionTopPanelCommand __instance)
@@ -143,4 +133,3 @@ public class Plugin : BasePlugin
         }
     }
 }
-
