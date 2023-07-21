@@ -2,7 +2,6 @@
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace BackToTheTitleScreen;
