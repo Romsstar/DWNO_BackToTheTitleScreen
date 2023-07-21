@@ -1,14 +1,9 @@
-﻿using System.Diagnostics;
-using System.Reflection;
-using System.Security.AccessControl;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using UnityEngine;
-using static AppMainScript;
-using static SwitchDlcItem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.SocialPlatforms;
 
 namespace BackToTheTitleScreen;
 
@@ -31,28 +26,22 @@ public class Plugin : BasePlugin
         harmony.PatchAll();
     }
 
-
-
-    [HarmonyPatch(typeof(_HeadsUpDisp_d__100), "MoveNext")]
+    [HarmonyPatch(typeof(AppMainScript._HeadsUpDisp_d__100), "MoveNext")]
     public static class Splash
     {
-        public static bool Prefix(_HeadsUpDisp_d__100 __instance)
+        public static bool Prefix(AppMainScript._HeadsUpDisp_d__100 __instance)
         {
-            __instance._waitStartTime_5__2 = 0;
-            __instance.__4__this.MessageManager.SetActive(false);
-            return true;
+            __instance._waitStartTime_5__2 = 0f;
+           return true;
         }
 
-        [HarmonyPatch(typeof(__CheckDlc_d__96), "MoveNext")]
-        public static bool Prefix(__CheckDlc_d__96 __instance)
+        [HarmonyPatch(typeof(AppMainScript.__CheckDlc_d__96), "MoveNext")]
+        public static bool Prefix(AppMainScript.__CheckDlc_d__96 __instance)
         {
-            __instance._startTime_5__2 = 0;
-            __instance.__4__this.MessageManager.SetActive(false);
+            __instance._startTime_5__2 = 0f;
             return true;
         }
-
     }
-
 
     [HarmonyPatch(typeof(uOptionPanel), "_StartQuitWindow_b__13_0")]
     public static class TitleScreenPatch
@@ -75,6 +64,33 @@ public class Plugin : BasePlugin
             return false;
         }
 
+        // Harmony patch class
+        [HarmonyPatch(typeof(MainTitle))]
+        class MainTitlePatch_Update_Patch
+        {
+            [HarmonyPrefix]
+            [HarmonyPatch("Update")]
+            static bool Prefix(MainTitle __instance)
+            {
+                GameObject logo = GameObject.Find("Logo");
+                UnityEngine.Object.DestroyImmediate(logo);
+
+                if (__instance.m_movie != null && __instance.m_movie.IsPlaying())
+                {
+      
+                    __instance.m_movie.Stop();
+                    UnityEngine.Object.Destroy(__instance.m_movie.transform.parent.gameObject, 0);
+                    __instance.m_movie = null;
+                    Resources.UnloadUnusedAssets();
+                    GC.Collect();
+                    return false; 
+                }
+
+                // Otherwise, allow the original Update method to execute as usual
+                return true;
+            }
+        }
+
 
         [HarmonyPatch(typeof(uOptionPanel), "SetMainSettingState")]
         private static bool Prefix(uOptionPanel __instance, uOptionPanel.MainSettingState state)
@@ -93,7 +109,6 @@ public class Plugin : BasePlugin
             return true;
         }
 
-
         [HarmonyPatch(typeof(uOptionTopPanelCommand), "enablePanel")]
         public static void Postfix(uOptionTopPanelCommand __instance)
         {
@@ -102,26 +117,4 @@ public class Plugin : BasePlugin
             textComponent.text = "Return to the Title Screen";
         }
     }
-    }
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
