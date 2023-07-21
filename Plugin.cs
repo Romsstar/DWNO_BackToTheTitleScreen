@@ -26,9 +26,11 @@ public class Plugin : BasePlugin
         harmony.PatchAll();
     }
 
-    [HarmonyPatch(typeof(AppMainScript._HeadsUpDisp_d__100), "MoveNext")]
+    
     public static class Splash
-    {
+    { 
+        [HarmonyPatch(typeof(AppMainScript._HeadsUpDisp_d__100), "MoveNext")]
+        [HarmonyPrefix]
         public static bool Prefix(AppMainScript._HeadsUpDisp_d__100 __instance)
         {
             __instance._waitStartTime_5__2 = 0f;
@@ -36,6 +38,7 @@ public class Plugin : BasePlugin
         }
 
         [HarmonyPatch(typeof(AppMainScript.__CheckDlc_d__96), "MoveNext")]
+        [HarmonyPrefix]
         public static bool Prefix(AppMainScript.__CheckDlc_d__96 __instance)
         {
             __instance._startTime_5__2 = 0f;
@@ -43,15 +46,16 @@ public class Plugin : BasePlugin
         }
     }
 
-    [HarmonyPatch(typeof(uOptionPanel), "_StartQuitWindow_b__13_0")]
+
     public static class TitleScreenPatch
     {
-        public static bool Prefix(uOptionPanel __instance, bool b)
+            [HarmonyPatch(typeof(uOptionPanel), "_StartQuitWindow_b__13_0")]
+            [HarmonyPrefix]
+            public static bool Prefix(uOptionPanel __instance, bool b)
         {
             if (b)
             {
                 __instance.m_State = uOptionPanel.State.CLOSE;
-                __instance.m_messageWindow = null;
                 UnityEngine.Object.DestroyImmediate(uDigivicePanel.Ref.m_TopPanel.gameObject);
                 SceneManager.Ref.CurrentSceneDestroy();
                 SceneManager.Ref.Push(SceneNo.Title);
@@ -64,7 +68,6 @@ public class Plugin : BasePlugin
             return false;
         }
 
-        // Harmony patch class
         [HarmonyPatch(typeof(MainTitle))]
         class MainTitlePatch_Update_Patch
         {
@@ -86,13 +89,13 @@ public class Plugin : BasePlugin
                     return false; 
                 }
 
-                // Otherwise, allow the original Update method to execute as usual
                 return true;
             }
         }
 
 
         [HarmonyPatch(typeof(uOptionPanel), "SetMainSettingState")]
+        [HarmonyPrefix]
         private static bool Prefix(uOptionPanel __instance, uOptionPanel.MainSettingState state)
         {
             __instance.m_IsTitle = true;
@@ -100,7 +103,6 @@ public class Plugin : BasePlugin
             if (state == uOptionPanel.MainSettingState.APPLICATION_QUIT)
             {
                 string message = "Return to the Title Screen?";
-
                 Action<bool> callback = __instance._StartQuitWindow_b__13_0;
                 AppMainScript.Ref.CommonYesNoWindowUI.Open(message, callback);
                 return false;
