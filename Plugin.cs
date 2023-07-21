@@ -55,6 +55,7 @@ public class Plugin : BasePlugin
             {
                 __instance.m_State = uOptionPanel.State.CLOSE;
                 UnityEngine.Object.DestroyImmediate(uDigivicePanel.Ref.m_TopPanel.gameObject);
+                UnityEngine.Object.DestroyImmediate(StorageData.m_uSavePanel);
                 SceneManager.Ref.CurrentSceneDestroy();
                 SceneManager.Ref.Push(SceneNo.Title);
             }
