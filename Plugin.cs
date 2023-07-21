@@ -12,7 +12,7 @@ namespace BackToTheTitleScreen;
 public class Plugin : BasePlugin
 {
     internal const string GUID = "Romsstar.DWNO.BackToTheTitleScreen";
-    internal const string PluginName = "BackToTheTitleScreen";
+    internal const string PluginName = "BackToTitle";
     internal const string PluginVersion = "1.0.0";
 
     public override void Load()
@@ -65,10 +65,10 @@ public class Plugin : BasePlugin
 
             return false;
         }
-    }
 
-    [HarmonyPatch(typeof(MainTitle))]
-    [HarmonyPrefix]
+
+        [HarmonyPatch(typeof(MainTitle))]
+        [HarmonyPrefix]
         [HarmonyPatch("Update")]
         static bool Prefix(MainTitle __instance)
         {
@@ -104,9 +104,14 @@ public class Plugin : BasePlugin
             // Game data does not exist in any of the slots
             return false;
         }
+
+    }
+
+
+    [HarmonyPatch(typeof(uOptionPanel), "SetMainSettingState")]
     public static class DigivicePatch
     {
-        [HarmonyPatch(typeof(uOptionPanel), "SetMainSettingState")]
+        
         [HarmonyPrefix]
         private static bool Prefix(uOptionPanel __instance, uOptionPanel.MainSettingState state)
         {
@@ -127,9 +132,13 @@ public class Plugin : BasePlugin
         [HarmonyPostfix]
         public static void Postfix(uOptionTopPanelCommand __instance)
         {
+
             GameObject applicationQuitObj = __instance.m_items[3]?.gameObject;
             Text textComponent = applicationQuitObj.GetComponentInChildren<Text>();
-            textComponent.text = "Return to the Title Screen";
+            if (textComponent.text == "Quit Game")
+            {
+                textComponent.text = "Return to the Title Screen";
+            }
         }
-    }
-}
+    }}
+
