@@ -2,7 +2,6 @@
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
 using UnityEngine.UI;
 
 namespace BackToTheTitleScreen;
@@ -54,10 +53,11 @@ public class Plugin : BasePlugin
             if (b)
             {
                 __instance.m_State = uOptionPanel.State.CLOSE;
-                UnityEngine.Object.DestroyImmediate(uDigivicePanel.Ref.m_TopPanel.gameObject);
-                UnityEngine.Object.DestroyImmediate(StorageData.m_uSavePanel);
+                UnityEngine.Object.Destroy(uDigivicePanel.Ref.m_TopPanel.gameObject);
+                UnityEngine.Object.Destroy(StorageData.m_uSavePanel);
                 SceneManager.Ref.CurrentSceneDestroy();
                 SceneManager.Ref.Push(SceneNo.Title);
+       
             }
             else
             {
@@ -112,7 +112,7 @@ public class Plugin : BasePlugin
     [HarmonyPatch(typeof(uOptionPanel), "SetMainSettingState")]
     public static class DigivicePatch
     {
-        
+
         [HarmonyPrefix]
         private static bool Prefix(uOptionPanel __instance, uOptionPanel.MainSettingState state)
         {
@@ -141,5 +141,22 @@ public class Plugin : BasePlugin
                 textComponent.text = "Return to the Title Screen";
             }
         }
-    }}
+
+
+        [HarmonyPatch(typeof(StorageData.CSaveDataHeader), "ReadSaveData")]
+        [HarmonyPostfix]
+        public static void Postfix(StorageData __instance)
+        {
+            SteamAchievement.Ref.SetAchievement(TrophyNo.AchiveName.GuruOfSamsara);
+        }
+
+
+
+
+
+
+    }
+
+    }
+
 
