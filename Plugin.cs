@@ -142,19 +142,6 @@ public class Plugin : BasePlugin
             }
         }
 
-
-        [HarmonyPatch(typeof(StorageData.CSaveDataHeader), "ReadSaveData")]
-        [HarmonyPostfix]
-        public static void Postfix(StorageData __instance)
-        {
-            SteamAchievement.Ref.SetAchievement(TrophyNo.AchiveName.GuruOfSamsara);
-        }
-
-
-
-
-
-
     }
 
     }
