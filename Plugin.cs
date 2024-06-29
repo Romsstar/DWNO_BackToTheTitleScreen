@@ -1,8 +1,12 @@
 ﻿using BepInEx;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace BackToTheTitleScreen;
 
@@ -12,7 +16,7 @@ public class Plugin : BasePlugin
 {
     internal const string GUID = "Romsstar.DWNO.BackToTheTitleScreen";
     internal const string PluginName = "BackToTitle";
-    internal const string PluginVersion = "1.0.0";
+    internal const string PluginVersion = "1.1";
 
     public override void Load()
     {
@@ -25,9 +29,10 @@ public class Plugin : BasePlugin
         harmony.PatchAll();
     }
 
-    [HarmonyPatch(typeof(AppMainScript._HeadsUpDisp_d__100), "MoveNext")]
-    public static class Splash
+    [HarmonyPatch(typeof(uOptionPanel), "_StartQuitWindow_b__13_0")]
+    public static class TitleScreenPatch
     {
+        [HarmonyPatch(typeof(AppMainScript._HeadsUpDisp_d__100), "MoveNext")]
         [HarmonyPrefix]
         public static bool Prefix(AppMainScript._HeadsUpDisp_d__100 __instance)
         {
@@ -42,31 +47,43 @@ public class Plugin : BasePlugin
             __instance._startTime_5__2 = 0f;
             return true;
         }
-    }
 
-    [HarmonyPatch(typeof(uOptionPanel), "_StartQuitWindow_b__13_0")]
-    public static class TitleScreenPatch
-    {
         [HarmonyPrefix]
         public static bool Prefix(uOptionPanel __instance, bool b)
         {
             if (b)
             {
+                // Set the panel state to CLOSE
                 __instance.m_State = uOptionPanel.State.CLOSE;
-                UnityEngine.Object.Destroy(uDigivicePanel.Ref.m_TopPanel.gameObject);
-                UnityEngine.Object.Destroy(StorageData.m_uSavePanel);
-                SceneManager.Ref.CurrentSceneDestroy();
+
                 SceneManager.Ref.Push(SceneNo.Title);
-       
+
+                if (uDigivicePanel.Ref?.m_TopPanel != null)
+                {
+                    UnityEngine.Object.Destroy(uDigivicePanel.Ref.m_TopPanel.gameObject);
+                }
+
+                if (StorageData.m_uSavePanel != null)
+                {
+                    UnityEngine.Object.Destroy(StorageData.m_uSavePanel);
+                }
+
+                if (SceneManager.Ref != null)
+                {
+                    SceneManager.Ref.CurrentSceneDestroy();
+                }
+
+                StorageData.ClearSaveDataForRetryNewGame();
+                StorageData.InitializePartnerDataForRetryNewGame(0);
+                StorageData.InitializePartnerDataForRetryNewGame((AppInfo.PARTNER_NO)1);
             }
             else
             {
-                return true;
+                return true; // Continue with the original method execution
             }
 
-            return false;
+            return false; // Skip the original method execution as we've handled everything
         }
-
 
         [HarmonyPatch(typeof(MainTitle))]
         [HarmonyPrefix]
@@ -106,14 +123,9 @@ public class Plugin : BasePlugin
             return false;
         }
 
-    }
-
-
-    [HarmonyPatch(typeof(uOptionPanel), "SetMainSettingState")]
-    public static class DigivicePatch
-    {
-
+        [HarmonyPatch(typeof(uOptionPanel))]
         [HarmonyPrefix]
+        [HarmonyPatch("SetMainSettingState")]
         private static bool Prefix(uOptionPanel __instance, uOptionPanel.MainSettingState state)
         {
             __instance.m_IsTitle = true;
@@ -133,7 +145,6 @@ public class Plugin : BasePlugin
         [HarmonyPostfix]
         public static void Postfix(uOptionTopPanelCommand __instance)
         {
-
             GameObject applicationQuitObj = __instance.m_items[3]?.gameObject;
             Text textComponent = applicationQuitObj.GetComponentInChildren<Text>();
             if (textComponent.text == "Quit Game")
@@ -141,22 +152,5 @@ public class Plugin : BasePlugin
                 textComponent.text = "Return to the Title Screen";
             }
         }
-
-
-        [HarmonyPatch(typeof(StorageData.CSaveDataHeader), "ReadSaveData")]
-        [HarmonyPostfix]
-        public static void Postfix(StorageData __instance)
-        {
-            SteamAchievement.Ref.SetAchievement(TrophyNo.AchiveName.GuruOfSamsara);
-        }
-
-
-
-
-
-
     }
-
-    }
-
-
+}
