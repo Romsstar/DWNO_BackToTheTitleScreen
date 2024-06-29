@@ -152,14 +152,8 @@ public class Plugin : BasePlugin
                 textComponent.text = "Return to the Title Screen";
             }
         }
-
-
-
-
-
-
     }
-}    }
+}    
 
 
 
